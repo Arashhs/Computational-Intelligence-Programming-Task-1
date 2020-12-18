@@ -1,8 +1,8 @@
 import math
 import matplotlib.pyplot as plt
-
-X_INDEX = 0
-Y_INDEX = 1
+from ypstruct import struct
+import numpy as np
+import ga
 
 steiner_vert_num = 0
 terminal_vert_num = 0
@@ -35,7 +35,7 @@ def add_edge(v1_index, v2_index):
     global vertices
     v1 = vertices[v1_index]
     v2 = vertices[v2_index]
-    edge_cost = math.sqrt((v1[X_INDEX] - v2[X_INDEX])**2 + (v1[Y_INDEX] - v2[Y_INDEX])**2)
+    edge_cost = math.sqrt((v1.x - v2.x)**2 + (v1.y - v2.y)**2)
     graph[v1_index][v2_index] = edge_cost
     graph[v2_index][v1_index] = edge_cost
 
@@ -46,13 +46,19 @@ def init(file_name):
         steiner_vert_num, terminal_vert_num, edges_num = [int(x) for x in next(reader).split()] # read first line
         for i in range(steiner_vert_num):
             x, y = [int(x) for x in next(reader).split()] # read steiner vertices coordinates
-            steiner_vert.append((x, y))
-            add_vertex((x, y))
+            v = struct()
+            v.x = x
+            v.y = y
+            steiner_vert.append(v)
+            add_vertex(v)
 
         for i in range(terminal_vert_num):
             x, y = [int(x) for x in next(reader).split()] # read terminal vertices coordinates
-            terminal_vert.append((x, y))
-            add_vertex((x, y))
+            v = struct()
+            v.x = x
+            v.y = y
+            terminal_vert.append(v)
+            add_vertex(v)
 
         graph = [[0 for x in range(vertices_num)] for y in range(vertices_num)] # Creating empty 2d vertex list
 
@@ -60,31 +66,32 @@ def init(file_name):
             v1_index, v2_index = [int(x) for x in next(reader).split()] # read vertices corresponding to each edge
             add_edge(v1_index, v2_index)
 
-def calculate_cost():
-    cost = sum(map(sum, graph)) / 2
-    return cost
+def calculate_cost(graph_in):
+    cost = sum(map(sum, graph_in)) / 2
+    is_a_tree = is_tree(graph)
+    return cost, is_a_tree
 
 def plot_graph():
-    terminal_vertices_x = [x[0] for x in terminal_vert]
-    terminal_vertices_y = [x[1] for x in terminal_vert]
+    terminal_vertices_x = [vertex.x for vertex in terminal_vert]
+    terminal_vertices_y = [vertex.y for vertex in terminal_vert]
     plt.scatter(terminal_vertices_x, terminal_vertices_y, label= "Data", color= "red", linewidths=5, s=30)
 
-    steiner_vertices_x = [x[0] for x in steiner_vert]
-    steiner_vertices_y = [x[1] for x in steiner_vert]
+    steiner_vertices_x = [vertex.x for vertex in steiner_vert]
+    steiner_vertices_y = [vertex.y for vertex in steiner_vert]
     plt.scatter(steiner_vertices_x, steiner_vertices_y, label= "Data", color= "blue", s=30)
 
     for i in range(len(graph)):
         for j in range(len(graph)):
             if graph[i][j] != 0:
-                x_values = [vertices[i][0], vertices[j][0]]
-                y_values = [vertices[i][1], vertices[j][1]]
+                x_values = [vertices[i].x, vertices[j].x]
+                y_values = [vertices[i].y, vertices[j].y]
                 #print("({}, {}) -> ({}, {})".format(vertices[i][0], vertices[i][1], vertices[j][0], vertices[j][1]))
                 plt.plot(x_values, y_values, color='blue', linewidth=1)
     plt.show()
 
 
 # Checks whether there is a cycle in graph or not
-def is_cyclic(v, visited, parent): 
+def is_cyclic(v, graph_in, visited, parent): 
 
     # Mark current node as visited 
     visited[v] = True
@@ -92,9 +99,9 @@ def is_cyclic(v, visited, parent):
     # Recur for every vertex adjacent to this vertex 
     for i in range (len(vertices)): 
         # If an adjacent vertex is not visited, recur for it
-        if graph[v][i] != 0:
+        if graph_in[v][i] != 0:
             if visited[i] == False: 
-                if is_cyclic(i, visited, v) == True: 
+                if is_cyclic(i, graph_in, visited, v) == True: 
                     return True
 
             # If the adjacent vertex is visited and is not the parent of this graph, then there is a cycle
@@ -106,24 +113,21 @@ def is_cyclic(v, visited, parent):
   
 
 # Checks whether there is a cycle in graph or not
-def is_tree(): 
+def is_tree(graph_in): 
     # making a list for all nodes, showing their visit status
     visited = [False] * len(vertices)
 
     # checks if there is a cycle in the graph
     # starting the check from the first terminal node
     start_index = steiner_vert_num # first terminal node index
-    if is_cyclic(start_index, visited, -1) == True: 
-        print("visited: ", visited) 
+    if is_cyclic(start_index, graph_in, visited, -1) == True: 
         return False
 
     # If a terminal vertex is not reachable then we return false
     for i in range(len(vertices)): 
         if visited[i] == False and vertices[i] in terminal_vert:
-            print("visited: ", visited) 
             return False
     
-    print("visited: ", visited)  
     return True
 
 
@@ -131,7 +135,7 @@ def print_debugging():
     print(steiner_vert_num, terminal_vert_num, edges_num)
     print("Vertices:", vertices)
     print("Graph:", graph)
-    print("cost:", calculate_cost())
+    print("cost:", calculate_cost(graph))
 
 
 
@@ -140,12 +144,30 @@ def print_debugging():
 
 def main():
     
-#    init("steiner_in.txt")
-#    init("test.txt")
+    #init("steiner_in.txt")
+    #init("test.txt")
     init("test2.txt")
     plot_graph()
-    print("Tree?", is_tree())
 
+    ncost = calculate_cost(graph)
+
+    print("Tree which contants all of the terminal nodes?", ncost)
+
+    # Defining the problem
+    problem = struct()
+    problem.graph = graph
+    problem.cost = calculate_cost
+
+    # Defining the parameters
+    params = struct()
+    params.npop = 5 # population number
+    params.maxit = 100 # maximum number of iterations
+    params.steiner_vert = steiner_vert
+    params.terminal_vert = terminal_vert
+    params.vertices = vertices
+
+    # running the GA algorithm
+    ga.run(problem, params)
 
 
 
