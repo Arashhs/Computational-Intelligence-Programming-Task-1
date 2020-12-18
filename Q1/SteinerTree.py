@@ -12,6 +12,7 @@ steiner_vert = [] # Steiner Vertices
 terminal_vert = [] # Terminal Vertices
 vertices = []
 graph = [] # Our graph
+edges = []
 
 #add a vertex to the graph
 def add_vertex(v):
@@ -65,10 +66,15 @@ def init(file_name):
         for i in range(edges_num):
             v1_index, v2_index = [int(x) for x in next(reader).split()] # read vertices corresponding to each edge
             add_edge(v1_index, v2_index)
+            edge = struct()
+            edge.v1 = v1_index
+            edge.v2 = v2_index
+            edge.valid = True
+            edges.append(edge)
 
 def calculate_cost(graph_in):
     cost = sum(map(sum, graph_in)) / 2
-    is_a_tree = is_tree(graph)
+    is_a_tree = is_tree(graph_in)
     return cost, is_a_tree
 
 def plot_graph():
@@ -157,14 +163,17 @@ def main():
     problem = struct()
     problem.graph = graph
     problem.cost = calculate_cost
+    problem.nvar = len(vertices) # number of variables
+    problem.steiner_vert = steiner_vert
+    problem.terminal_vert = terminal_vert
+    problem.vertices = vertices
+    problem.edges = edges
+
 
     # Defining the parameters
     params = struct()
     params.npop = 5 # population number
     params.maxit = 100 # maximum number of iterations
-    params.steiner_vert = steiner_vert
-    params.terminal_vert = terminal_vert
-    params.vertices = vertices
 
     # running the GA algorithm
     ga.run(problem, params)
