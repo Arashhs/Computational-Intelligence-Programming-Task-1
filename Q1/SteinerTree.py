@@ -69,13 +69,20 @@ def init(file_name):
             edge = struct()
             edge.v1 = v1_index
             edge.v2 = v2_index
-            edge.valid = True
+            edge.deleted = False
+            v1 = vertices[v1_index]
+            v2 = vertices[v2_index]
+            edge.cost =  math.sqrt((v1.x - v2.x)**2 + (v1.y - v2.y)**2)
             edges.append(edge)
 
 def calculate_cost(graph_in):
     cost = sum(map(sum, graph_in)) / 2
     is_a_tree = is_tree(graph_in)
     return cost, is_a_tree
+
+def calculate_cost2(edges_arr):
+    cost = sum(e.cost for e in edges_arr if e.deleted == False) / 2
+    return cost
 
 def plot_graph():
     terminal_vertices_x = [vertex.x for vertex in terminal_vert]
@@ -156,14 +163,15 @@ def main():
     plot_graph()
 
     ncost = calculate_cost(graph)
+    wcost = calculate_cost2(edges)
 
-    print("Tree which contants all of the terminal nodes?", ncost)
+    print("Tree which contants all of the terminal nodes?", ncost, wcost)
 
     # Defining the problem
     problem = struct()
     problem.graph = graph
-    problem.cost = calculate_cost
-    problem.nvar = len(vertices) # number of variables
+    problem.cost = calculate_cost2
+    problem.nvar = int(len(vertices)/2) # number of variables
     problem.steiner_vert = steiner_vert
     problem.terminal_vert = terminal_vert
     problem.vertices = vertices
@@ -172,8 +180,10 @@ def main():
 
     # Defining the parameters
     params = struct()
-    params.npop = 5 # population number
+    params.npop = 5 # ancestors population number
+    params.pc = 5 # children population number
     params.maxit = 100 # maximum number of iterations
+    params.npoints = 2 # number of points for crossover
 
     # running the GA algorithm
     ga.run(problem, params)
