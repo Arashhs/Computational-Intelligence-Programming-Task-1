@@ -1,68 +1,49 @@
+import math
+from ypstruct import structure
 import numpy as np
+import ES
+
+GLOBAL_MIN = -959.6407
+
+def eggholder_func(x):
+    x1 = x[0]
+    x2 = x[1]
+    term1 = -(x2+47) * math.sin(math.sqrt(abs(x2+x1/2+47)))
+    term2 = x1 * math.sin(math.sqrt(abs(x1-(x2+47))))
+    res = term1 - term2
+    return res
 
 
-class Chromosome:
-    def __init__(self, chromosome_length, min, max):
-        # Todo create a random list for genes between min and max below
-        self.gene = []
-        self.score = 0
-
-    def evaluate(self):
-        """
-        Update Score Field Here
-        """
-        #Todo
+def fitness_func(f):
+    term = abs(f-GLOBAL_MIN)
+    # handling the case when f = 0 since division by 0 is undefined
+    fitness = 1 / term if term != 0 else np.inf
+    return fitness
 
 
-Mu = 10
-# Todo change Mu's coefficient below to attain the best result
-Lambda = 1*Mu
-crossover_probability = 0.4
 
 
-def generate_initial_population():
-    # Todo
-    list_of_chromosomes = []
+def main():
 
-    return list_of_chromosomes
+    # Defining the problem
+    problem = structure()
+    problem.eggholder_func = eggholder_func
+    problem.fitess_func = fitness_func
+    problem.nvar = 2
+    problem.varmin = -512
+    problem.varmax = 512
 
-def generate_new_seed():
-    """
-    :return: return lambda selected parents
-    """
-    #Todo
-    return
+    # Defining the parameters
+    params = structure()
+    params.npop = 20 # ancestors population number
+    params.pc = 5*params.npop # children population number
+    params.maxit = 200 # maximum number of iterations
+    params.sigma = 0.9 # learning rate
+    
 
-def crossover(chromosome1, chromosome2):
-    # Todo
-    return
-
-def mutation(chromosome):
-    """
-    Don't forget to use Gaussian Noise here !
-    :param chromosome:
-    :return: mutated chromosome
-    """
-    # Todo
-    return
-
-def evaluate_new_generation():
-    #Todo
-    """
-    Call evaluate method for each new chromosome
-    :return: list of chromosomes with evaluated scores
-    """
-    return
-
-def choose_new_generation():
-    #Todo
-    """
-    Use one of the discussed methods in class.
-    Q-tournament is suggested !
-    :return: Mu selected chromosomes for next cycle
-    """
-    return
+    # running the GA algorithm
+    ES.run(problem, params)
 
 
 if __name__ == '__main__':
-    # Todo -- Use Methods In a proper arrangement
+    main()

@@ -284,7 +284,7 @@ def main():
     # Defining the parameters
     params = structure()
     params.npop = 25 # ancestors population number
-    params.pc = 25 # children population number
+    params.pc = 4 # children population is pc times the npop
     params.maxit = 200 # maximum number of iterations
     params.npoints = 2 # number of points for crossover
     params.mu = 0.2 # mutation probability
