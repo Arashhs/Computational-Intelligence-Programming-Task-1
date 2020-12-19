@@ -90,12 +90,12 @@ def init(file_name):
             edges.append(edge)
 
 def calculate_cost(graph_in):
-    cost = sum(map(sum, graph_in)) / 2
+    cost = int(sum(map(sum, graph_in)) / 2)
     is_a_tree = is_tree(graph_in)
     return cost, is_a_tree
 
 def calculate_cost2(edges_arr):
-    cost = sum(e.cost for e in edges_arr if e.deleted == False) / 2
+    cost = int(sum(e.cost for e in edges_arr if e.deleted == False))
     cor_graph = build_graph(edges_arr)
     # is_a_tree = is_tree(cor_graph)
     terminals_connected = are_terminals_connected(cor_graph) 
@@ -104,7 +104,7 @@ def calculate_cost2(edges_arr):
 def calculate_cost3(edges_arr):
     cost, terminals_connected, cc = calculate_cost2(edges_arr)
     if terminals_connected == False:
-         cost = cost + 10000 * len(cc)
+        cost = cost + 10000 * len(cc)
     return cost
 
 def calculate_cost4(edges_arr):
@@ -283,9 +283,9 @@ def main():
 
     # Defining the parameters
     params = structure()
-    params.npop = 6 # ancestors population number
-    params.pc = 6 # children population number
-    params.maxit = 100 # maximum number of iterations
+    params.npop = 10 # ancestors population number
+    params.pc = 10 # children population number
+    params.maxit = 1000 # maximum number of iterations
     params.npoints = 2 # number of points for crossover
     params.mu = 0.2 # mutation probability
     params.beta = 1
@@ -293,7 +293,6 @@ def main():
     # running the GA algorithm
     ga.run(problem, params)
 
-    # plot graph
 
 
 

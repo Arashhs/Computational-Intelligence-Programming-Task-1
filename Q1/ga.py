@@ -112,7 +112,7 @@ def run(problem, params):
     for i in range(npop):
         pop[i].edges = copy_edges_arr(edges)
         # randomly delete edges
-        random_positions = np.random.uniform(0, len(edges) - 1, nvar)
+        random_positions = np.random.randint(0, len(edges) - 1, nvar)
         for rand in random_positions:
             delete_edge(pop[i], int(round(rand)))
         pop[i].cost = cost(pop[i].edges)
@@ -231,6 +231,14 @@ def run(problem, params):
     best_chromosome.cost = calculate_cost4(best_chromosome.edges)
     plot_graph(build_graph(best_chromosome.edges))
     print("Final Best Cost:", best_chromosome.cost)
+
+    # Writing the results to file
+    f = open("steiner_out.txt","w+")
+    for i in range(len(edges)):
+        if best_chromosome.edges[i].deleted == False:
+            f.write("{}\n".format(i))
+    total_final_cost = sum(e.cost for e in best_chromosome.edges if e.deleted == False)
+    f.write("{}".format(int(total_final_cost)))
         
 
     # output
