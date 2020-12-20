@@ -3,12 +3,6 @@ import numpy as np
 import math
 
 
-def crossover(p1, p2):
-    pass
-
-
-def mutation(p, mu):
-    pass
 
 
 def schedule_day(nurses_num=8, max_shifts_num=9):
@@ -34,6 +28,71 @@ def schedule_week(nurses_num=8, max_shifts_num=9):
     for i in range(7):
         sched_week.append(schedule_day(nurses_num, max_shifts_num))
     return sched_week
+
+
+
+def uniform_crossover(A, B, P):
+    c1 = A.deepcopy()
+    c2 = B.deepcopy()
+    c1week = c1.schedule
+    c2week = c2.schedule
+    for i in range(len(c1week)):
+        temp = [0] * 9
+        if P[0] < 0.5:
+            temp[0:3] = c1week[i][0:3]
+            c1week[i][0:3] = c2week[i][0:3]
+            c2week[i][0:3] = temp[0:3]
+        if P[1] < 0.5:
+            temp[3:7] = c1week[i][3:7]
+            c1week[i][3:7] = c2week[i][3:7]
+            c2week[i][3:7] = temp[3:7]
+        if P[2] < 0.5:
+            temp[7:9] = c1week[i][7:9]
+            c1week[i][7:9] = c2week[i][7:9]
+            c2week[i][7:9] = temp[7:9]
+
+    c1.schedule = c1week
+    c2.schedule = c2week
+    return c1, c2
+
+
+def crossover(A, B, P):
+    c1 = A.deepcopy()
+    c2 = B.deepcopy()
+    c1week = c1.schedule
+    c2week = c2.schedule
+    for i in range(len(c1week)):
+        temp = [0] * 9
+        if P[0] < 0.5:
+            temp[0:3] = c1week[i][0:3]
+            c1week[i][0:3] = c2week[i][0:3]
+            c2week[i][0:3] = temp[0:3]
+        if P[1] < 0.5:
+            temp[3:7] = c1week[i][3:7]
+            c1week[i][3:7] = c2week[i][3:7]
+            c2week[i][3:7] = temp[3:7]
+        if P[2] < 0.5:
+            temp[7:9] = c1week[i][7:9]
+            c1week[i][7:9] = c2week[i][7:9]
+            c2week[i][7:9] = temp[7:9]
+
+    c1.schedule = c1week
+    c2.schedule = c2week
+    return c1, c2
+
+
+def mutate(p, mu):
+    res = p.deepcopy()
+    flag = np.random.rand(7) <= mu
+    for i in range(len(flag)):
+        if flag[i]:
+            n1 = np.random.randint(0, 9)
+            n2 = np.random.randint(0, 9)
+            tmp = res.schedule[i][n1]
+            res.schedule[i][n1] = res.schedule[i][n2]
+            res.schedule[i][n2] = tmp
+    return res
+
 
 
 def run(problem, params):
@@ -93,13 +152,7 @@ def run(problem, params):
 
         popc = []
 
-        # mutation
-        for j in range(len(popc)):
-            popc[j].sigma = popc[j].sigma * math.exp(popc[j].sigma * np.random.randn())
-            popc[j].x = popc[j].x + popc[j].sigma * np.random.randn(*popc[j].x.shape)
-
-
-        # parent selection and crossover
+        # parent selection, crossover, and mutation
         for k in range(nc//2):
 
             # select parents
@@ -108,11 +161,11 @@ def run(problem, params):
             p2 = pop[q[1]] # random second parent
 
             # perform corssover
-            c1, c2 = crossover(p1, p2)
+            p = np.random.rand(3)
+            c1, c2 = uniform_crossover(p1, p2, p)
 
             # evaluate first offspring
-            c1.f = eggholder_func(c1.x)
-            c1.fitness = fitness_func(c1.f)
+            c1.fitness = fitness_func(c1.schedule)
 
             if c1.fitness >= best_chromosome.fitness:
                 best_chromosome = c1.deepcopy()
@@ -121,8 +174,7 @@ def run(problem, params):
                 worst_chromosome = c1.deepcopy()
 
             # evaluate second offspring
-            c2.f = eggholder_func(c2.x)
-            c2.fitness = fitness_func(c2.f)
+            c2.fitness = fitness_func(c2.schedule)
 
             if c2.fitness >= best_chromosome.fitness:
                 best_chromosome = c2.deepcopy()
@@ -130,12 +182,17 @@ def run(problem, params):
             if c2.fitness <= worst_chromosome.fitness:
                 worst_chromosome = c2.deepcopy()
 
+            # mutation
+            c1 = mutate(c1, mu)
+            c2 = mutate(c2, mu)
+
+
             # add offsprings to popc
             popc.append(c1)
             popc.append(c2)
 
         # merge, sort, and select
-        pop = popc # Lambda, mu selection
+        pop += popc # Lambda, mu selection
         pop = sorted(pop, key=lambda p: p.fitness, reverse=True)
         pop = pop[0:npop] # top npop population
 
@@ -144,14 +201,36 @@ def run(problem, params):
 
         # print information
         avg_fitness = sum(p.fitness for p in pop)/npop
-        avg_f = sum(p.f for p in pop)/npop
         print("Iteration:", it)
-        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Best", fitness=best_chromosome.fitness, cost=best_chromosome.f))
-        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Worst", fitness=worst_chromosome.fitness, cost=worst_chromosome.f))
-        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Average", fitness=avg_fitness, cost=avg_f))
+        print("{identity:<7} Chromosome: fitness = {fitness:.8f}".format(identity="Best", fitness=best_chromosome.fitness))
+        print("{identity:<7} Chromosome: fitness = {fitness:.8f}".format(identity="Worst", fitness=worst_chromosome.fitness))
+        print("{identity:<7} Chromosome: fitness = {fitness:.8f}".format(identity="Average", fitness=avg_fitness))
         print("\n")
 
-    print("Final Result:\nResulted Global Minimum = {}, x1 = {}, x2 = {}".format(best_chromosome.f, best_chromosome.x[0], best_chromosome.x[1]))    
+        if(best_chromosome.fitness == 250):
+            break
+
+    print("\nOutput:")
+    result = []
+    string_output = ""
+    for sched_day in best_chromosome.schedule:
+        shift1 = sched_day[0:3]
+        shift1 = [i for i in shift1 if i!=0]
+        shift2 = sched_day[3:7]
+        shift2 = [i for i in shift2 if i!=0]
+        shift3 = sched_day[7:9]
+        shift3 = [i for i in shift3 if i!=0]
+        day_res = []
+        day_res.append(shift1)
+        day_res.append(shift2)
+        day_res.append(shift3)
+        result.append(day_res)
+        for shift in day_res:
+            string_output += ','.join(map(str, shift))
+            string_output += " "
+        string_output += "\n"
+    print(string_output)
+    
 
 
 
