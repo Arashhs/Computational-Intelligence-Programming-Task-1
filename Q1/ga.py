@@ -18,6 +18,13 @@ def edges_to_bit_arr(edges_arr):
     for i in range(len(bit_arr)):
         bit_arr[i] = 0 if edges_arr[i].deleted else 1
     return bit_arr
+
+def mst_edges_to_bit_arr(edges_bit_arr, mst_edges):
+    for i in range(len(mst_edges)):
+        if mst_edges[i] == False:
+            edges_bit_arr[i] = 0
+    return edges_bit_arr
+
         
 
 def delete_edge(chromosome, index):
@@ -75,6 +82,7 @@ def run(problem, params):
     plot_graph = problem.plot_graph
     build_graph = problem.build_graph
     calculate_cost4 = problem.calculate_cost4
+    prim_mst = problem.prim_mst
 
 
     # parameters
@@ -180,9 +188,19 @@ def run(problem, params):
             c1.edges_bit_arr = mutation(c1.edges_bit_arr, mu)
             c2.edges_bit_arr = mutation(c2.edges_bit_arr, mu)
 
+
             # update c1 and c2 edges
             c1.edges = bit_arr_to_edges(c1.edges_bit_arr, c1.edges)
-            c1.edges = bit_arr_to_edges(c2.edges_bit_arr, c2.edges)
+            c2.edges = bit_arr_to_edges(c2.edges_bit_arr, c2.edges)
+
+            mst1 = prim_mst(build_graph(c1.edges))
+            mst2 = prim_mst(build_graph(c2.edges))
+
+            c1.edges_bit_arr = mst_edges_to_bit_arr(c1.edges_bit_arr, mst1)
+            c2.edges_bit_arr = mst_edges_to_bit_arr(c2.edges_bit_arr, mst2)
+
+            c1.edges = bit_arr_to_edges(c1.edges_bit_arr, c1.edges)
+            c2.edges = bit_arr_to_edges(c2.edges_bit_arr, c2.edges)
 
             # evaluate first offspring
             c1.cost = cost(c1.edges)

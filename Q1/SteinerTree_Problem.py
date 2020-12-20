@@ -2,6 +2,7 @@ import math
 import matplotlib.pyplot as plt
 from ypstruct import structure
 import numpy as np
+import sys
 import ga
 
 steiner_vert_num = 0
@@ -244,6 +245,77 @@ def print_debugging():
     print("cost:", calculate_cost(graph))
 
 
+# A utility function to find the vertex with  
+# minimum distance value, from the set of vertices  
+# not yet included in shortest path tree 
+def minKey(key, mstSet): 
+
+    # Initilaize min value 
+    min = 100000000
+
+    for v in range(vertices_num): 
+        if key[v] <= min and mstSet[v] == False: 
+            min = key[v] 
+            min_index = v 
+
+    return min_index 
+  
+
+# Function to construct and print MST for a graph  
+# represented using adjacency matrix representation 
+def prim_mst(graph_in): 
+
+    # Key values used to pick minimum weight edge in cut 
+    key = [10000000] * vertices_num
+    parent = [None] * vertices_num # Array to store constructed MST 
+    # Make key 0 so that this vertex is picked as first vertex 
+    key[0] = 0
+    mstSet = [False] * vertices_num
+
+    parent[0] = -1 # First node is always the root of 
+
+    for cout in range(vertices_num): 
+
+        # Pick the minimum distance vertex from  
+        # the set of vertices not yet processed.  
+        # u is always equal to src in first iteration 
+        u = minKey(key, mstSet) 
+
+        # Put the minimum distance vertex in  
+        # the shortest path tree 
+        mstSet[u] = True
+
+        # Update dist value of the adjacent vertices  
+        # of the picked vertex only if the current  
+        # distance is greater than new distance and 
+        # the vertex in not in the shotest path tree 
+        for v in range(vertices_num): 
+
+            # graph[u][v] is non zero only for adjacent vertices of m 
+            # mstSet[v] is false for vertices not yet included in MST 
+            # Update the key only if graph[u][v] is smaller than key[v] 
+            if graph_in[u][v] > 0 and mstSet[v] == False and key[v] > graph_in[u][v]: 
+                    key[v] = graph_in[u][v] 
+                    parent[v] = u 
+
+    return get_mst_edges(parent, graph_in)
+
+def get_mst_edges(parent, graph_in):
+    mst_edges = [False] * len(edges)
+    for k in range(len(edges)):
+        for i in range(1, vertices_num):
+            if (edges[k].v1 == parent[i] and edges[k].v2 == i) or (edges[k].v2 == parent[i] and edges[k].v1 == i):
+                #print("OHYEAH:",parent[i], i, edges[k].deleted, edges[k].cost)
+                mst_edges[k] = True
+
+    '''print(mst_edges)
+    print([[e.v1, e.v2, e.deleted] for e in edges])
+    print("Edge \tWeight")
+    for i in range(1, vertices_num): 
+        print(parent[i], "-", i, "\t", graph_in[i][ parent[i] ])'''
+    return mst_edges
+
+
 
     
 
@@ -251,10 +323,11 @@ def print_debugging():
 def main():
     
     init("steiner_in.txt")
-    #init("test.txt")
+    # init("test.txt")
     #init("test2.txt")
     #init("test3.txt")
     #plot_graph(graph)
+    prim_mst(graph)
 
     #print(are_terminals_connected(graph))
     #print(connectedComponents(graph))
@@ -279,13 +352,14 @@ def main():
     problem.plot_graph = plot_graph
     problem.build_graph = build_graph
     problem.calculate_cost4 = calculate_cost4
+    problem.prim_mst = prim_mst
 
 
     # Defining the parameters
     params = structure()
-    params.npop = 25 # ancestors population number
-    params.pc = 4 # children population is pc times the npop
-    params.maxit = 200 # maximum number of iterations
+    params.npop = 20 # ancestors population number
+    params.pc = 2 # children population is pc times the npop
+    params.maxit = 5 # maximum number of iterations
     params.npoints = 2 # number of points for crossover
     params.mu = 0.2 # mutation probability
     params.beta = 1
