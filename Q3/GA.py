@@ -232,7 +232,7 @@ def run(problem, params):
     print(string_output)
 
     # Writing the results to file
-    f = open("steiner_out.txt","w+")
+    f = open("nurse_out.txt","w+")
     f.write(string_output)
     
 
