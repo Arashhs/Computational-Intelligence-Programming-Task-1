@@ -8,6 +8,7 @@ def crossover(p1, p2, gamma=0.1):
     alpha = np.random.uniform(-gamma, 1+gamma, *c1.x.shape)
     c1.x = alpha*p1.x + (1-alpha)*p2.x
     c2.x = alpha*p2.x + (1-alpha)*p1.x
+    return c1, c2
 
 
 def run(problem, params):
@@ -25,6 +26,7 @@ def run(problem, params):
     maxit = params.maxit # maximum number of iterations
     sigma = params.sigma # learning rate
     pc = params.pc # children population
+    gamma = params.gamma
     # nc is the number of children, which is pc times the number of parents
     # first divided by 2 and rounded, then multiplied by 2 to ensure that nc is an even number
     nc = int(np.round(pc*npop/2)*2) 
@@ -64,7 +66,9 @@ def run(problem, params):
     print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Worst", fitness=worst_chromosome.fitness, cost=worst_chromosome.f))
     print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Average", fitness=avg_fitness, cost=avg_f))
     print("\n")
-    print(best_chromosome.x.shape, *best_chromosome.x.shape)
+
+    # best cost of iterations
+    bestcost = np.empty(maxit)
 
     # main loop
     for it in range(maxit):
@@ -74,7 +78,7 @@ def run(problem, params):
         # mutation
         for j in range(len(popc)):
             popc[j].sigma = popc[j].sigma * math.exp(popc[j].sigma * np.random.randn())
-            popc[j].x = popc[j].x + popc[j].sigma * np.random.randn(len(popc[j].x))
+            popc[j].x = popc[j].x + popc[j].sigma * np.random.randn(*popc[j].x.shape)
 
 
         # parent selection and crossover
@@ -86,13 +90,50 @@ def run(problem, params):
             p2 = pop[q[1]] # random second parent
 
             # perform corssover
+            c1, c2 = crossover(p1, p2)
 
+            # evaluate first offspring
+            c1.f = eggholder_func(c1.x)
+            c1.fitness = fitness_func(c1.f)
 
+            if c1.fitness >= best_chromosome.fitness:
+                best_chromosome = c1.deepcopy()
+            
+            if c1.fitness <= worst_chromosome.fitness:
+                worst_chromosome = c1.deepcopy()
 
-    # best cost of iterations
-    bestcost = np.empty(maxit)
+            # evaluate second offspring
+            c2.f = eggholder_func(c2.x)
+            c2.fitness = fitness_func(c2.f)
 
-    
+            if c2.fitness >= best_chromosome.fitness:
+                best_chromosome = c2.deepcopy()
+            
+            if c2.fitness <= worst_chromosome.fitness:
+                worst_chromosome = c2.deepcopy()
+
+            # add offsprings to popc
+            popc.append(c1)
+            popc.append(c2)
+
+        # merge, sort, and select
+        pop = popc # Lambda, mu selection
+        pop = sorted(pop, key=lambda p: p.fitness, reverse=True)
+        pop = pop[0:npop] # top npop population
+
+        # store best cost
+        bestcost[it] = best_chromosome.cost
+
+        # print information
+        avg_fitness = sum(p.fitness for p in pop)/npop
+        avg_f = sum(p.f for p in pop)/npop
+        print("Iteration:", it)
+        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Best", fitness=best_chromosome.fitness, cost=best_chromosome.f))
+        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Worst", fitness=worst_chromosome.fitness, cost=worst_chromosome.f))
+        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Average", fitness=avg_fitness, cost=avg_f))
+        print("\n")
+
+    print("Final Result:\nResulted Global Minimum = {}, x1 = {}, x2 = {}".format(best_chromosome.f, best_chromosome.x[0], best_chromosome.x[1]))    
 
 
 

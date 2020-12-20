@@ -35,10 +35,11 @@ def main():
 
     # Defining the parameters
     params = structure()
-    params.npop = 20 # ancestors population number
-    params.pc = 5*params.npop # children population number
-    params.maxit = 200 # maximum number of iterations
+    params.npop = 40 # ancestors population number
+    params.pc = 4*params.npop # children population number
+    params.maxit = 30 # maximum number of iterations
     params.sigma = 0.9 # learning rate
+    params.gamma = 0.1
     
 
     # running the GA algorithm
