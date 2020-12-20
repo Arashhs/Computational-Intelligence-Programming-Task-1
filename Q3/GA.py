@@ -2,41 +2,61 @@ from ypstruct import structure
 import numpy as np
 import math
 
-def crossover(p1, p2, gamma=0.1):
-    c1 = p1.deepcopy()
-    c2 = p2.deepcopy()
-    alpha = np.random.uniform(-gamma, 1+gamma, *c1.x.shape)
-    c1.x = alpha*p1.x + (1-alpha)*p2.x
-    c2.x = alpha*p2.x + (1-alpha)*p1.x
-    return c1, c2
+
+def crossover(p1, p2):
+    pass
+
+
+def mutation(p, mu):
+    pass
+
+
+def schedule_day(nurses_num=8, max_shifts_num=9):
+    shift1_num = np.random.randint(2, 4)
+    sched1 = np.random.choice(range(1, (nurses_num + 1)), shift1_num, replace=False).tolist()
+    while len(sched1) < 3:
+        sched1.append(0)
+    shift2_num = np.random.randint(2, 5)
+    sched2 = np.random.choice(range(1, (nurses_num + 1)), shift2_num, replace=False).tolist()
+    while len(sched2) < 4:
+        sched2.append(0)
+    shift3_num = np.random.randint(1, 3)
+    sched3 = np.random.choice(range(1, (nurses_num + 1)), shift3_num, replace=False).tolist()
+    while len(sched3) < 2:
+        sched3.append(0)
+
+    sched = sched1 + sched2 + sched3
+    return sched
+
+
+def schedule_week(nurses_num=8, max_shifts_num=9):
+    sched_week = []
+    for i in range(7):
+        sched_week.append(schedule_day(nurses_num, max_shifts_num))
+    return sched_week
 
 
 def run(problem, params):
     
     # problem
-    eggholder_func = problem.eggholder_func
     fitness_func = problem.fitess_func
-    nvar = problem.nvar
-    varmin = problem.varmin
-    varmax = problem.varmax 
+    nurses_num = problem.nurses_num
+    max_shifts_num = problem.max_shifts_num
 
 
     # parameters
     npop = params.npop # population number
     maxit = params.maxit # maximum number of iterations
-    sigma = params.sigma # learning rate
     pc = params.pc # children population
-    gamma = params.gamma
+    mu = params.mu # mutation probability
     # nc is the number of children, which is pc times the number of parents
     # first divided by 2 and rounded, then multiplied by 2 to ensure that nc is an even number
     nc = int(np.round(pc*npop/2)*2) 
 
     # empty chromosome
     empty_chromosome = structure()
-    empty_chromosome.f = None # f = EggHolder(x)
     empty_chromosome.fitness = None
-    empty_chromosome.x = None # x = [x1, x2]
-    empty_chromosome.sigma = sigma # learning rate
+    empty_chromosome.schedule = None
 
     # best solution
     best_chromosome = empty_chromosome.deepcopy()
@@ -49,9 +69,8 @@ def run(problem, params):
     # initalizing population
     pop = empty_chromosome.repeat(npop)
     for i in range(npop):
-        pop[i].x = np.random.uniform(varmin, varmax, nvar)
-        pop[i].f = eggholder_func(pop[i].x)
-        pop[i].fitness = fitness_func(pop[i].f)
+        pop[i].schedule = schedule_week(nurses_num, max_shifts_num)
+        pop[i].fitness = fitness_func(pop[i].schedule)
 
         if pop[i].fitness >= best_chromosome.fitness:
             best_chromosome = pop[i].deepcopy()
@@ -61,10 +80,9 @@ def run(problem, params):
 
     print("Initial Population:")
     avg_fitness = sum(p.fitness for p in pop)/npop
-    avg_f = sum(p.f for p in pop)/npop
-    print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.6f}".format(identity="Best", fitness=best_chromosome.fitness, cost=best_chromosome.f))
-    print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.6f}".format(identity="Worst", fitness=worst_chromosome.fitness, cost=worst_chromosome.f))
-    print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.6f}".format(identity="Average", fitness=avg_fitness, cost=avg_f))
+    print("{identity:<7} Chromosome: fitness = {fitness:.8f}".format(identity="Best", fitness=best_chromosome.fitness))
+    print("{identity:<7} Chromosome: fitness = {fitness:.8f}".format(identity="Worst", fitness=worst_chromosome.fitness))
+    print("{identity:<7} Chromosome: fitness = {fitness:.8f}".format(identity="Average", fitness=avg_fitness))
     print("\n")
 
     # best cost of iterations
@@ -128,9 +146,9 @@ def run(problem, params):
         avg_fitness = sum(p.fitness for p in pop)/npop
         avg_f = sum(p.f for p in pop)/npop
         print("Iteration:", it)
-        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.6f}".format(identity="Best", fitness=best_chromosome.fitness, cost=best_chromosome.f))
-        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.6f}".format(identity="Worst", fitness=worst_chromosome.fitness, cost=worst_chromosome.f))
-        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.6f}".format(identity="Average", fitness=avg_fitness, cost=avg_f))
+        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Best", fitness=best_chromosome.fitness, cost=best_chromosome.f))
+        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Worst", fitness=worst_chromosome.fitness, cost=worst_chromosome.f))
+        print("{identity:<7} Chromosome: fitness = {fitness:.8f}, f = {cost:.3f}".format(identity="Average", fitness=avg_fitness, cost=avg_f))
         print("\n")
 
     print("Final Result:\nResulted Global Minimum = {}, x1 = {}, x2 = {}".format(best_chromosome.f, best_chromosome.x[0], best_chromosome.x[1]))    
