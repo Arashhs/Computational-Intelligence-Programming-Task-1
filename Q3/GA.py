@@ -207,7 +207,7 @@ def run(problem, params):
         print("{identity:<7} Chromosome: fitness = {fitness:.8f}".format(identity="Average", fitness=avg_fitness))
         print("\n")
 
-        if(best_chromosome.fitness == 250):
+        if(best_chromosome.fitness == 350):
             break
 
     print("\nOutput:")
@@ -230,6 +230,10 @@ def run(problem, params):
             string_output += " "
         string_output += "\n"
     print(string_output)
+
+    # Writing the results to file
+    f = open("steiner_out.txt","w+")
+    f.write(string_output)
     
 
 

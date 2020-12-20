@@ -14,10 +14,10 @@ def fitness_func(sched_week):
         shift3 = sched_day[7:9]
         for i in shift1:
             if i in shift2 and i != 0:
-                stage1_score -= 1
+                stage1_score -= 10
         for i in shift2:
             if i in shift3 and i != 0:
-                stage1_score -= 1
+                stage1_score -= 10
 
     stage2_score = max_stage2_score = 100
     nurse_shifts_num = [0] * (NURSES_NUM+1)
@@ -27,7 +27,7 @@ def fitness_func(sched_week):
 
     for num in nurse_shifts_num:
         if num > 5:
-            stage2_score = stage2_score - (num - 5) * 2
+            stage2_score = stage2_score - (num - 5) * 5
 
     stage3_score = max_stage3_score = 100
     for sched_day in sched_week:
@@ -63,7 +63,7 @@ def fitness_func(sched_week):
         stage4_score -= (duplicates*10)
         #print(duplicates, shift1, shift2, shift3)
         
-    fitness = stage1_score + stage2_score + stage3_score
+    fitness = stage1_score + stage2_score + stage3_score + stage4_score
     return fitness
 
 
@@ -77,10 +77,10 @@ def main():
 
     # Defining the parameters
     params = structure()
-    params.npop = 40 # ancestors population number
-    params.pc = 3*params.npop # children population number
+    params.npop = 100 # ancestors population number
+    params.pc = 1*params.npop # children population number
     params.maxit = 100 # maximum number of iterations
-    params.mu = 0.5 # mutation probability
+    params.mu = 0.4 # mutation probability
     
     # running the GA algorithm
     GA.run(problem, params)
