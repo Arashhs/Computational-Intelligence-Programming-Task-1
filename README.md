@@ -1,2 +1,2 @@
-# Computational Intelligence HW1 Programming
+# Computational Intelligence Programming Task
 Solving NP-Complete problems using Genetic Algorithms and Evolution Strategy for my Computational Intelligence course. In the first code, I solve the Steiner Tree Problem using Genetic Algorithms. Second problem is an optimization problem, I have implemented an ES algorithm to find the global minimum of the Eggholder function.  In the final question, I have implemented a GA algorithm to find an answer for a Constraint Satisfaction Problem (CSP) problem.
